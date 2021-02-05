@@ -29,6 +29,5 @@ func main() {
 		log.Fatalf("Failed to convert PORT env var to int: %v\n", err)
 	}
 	server := NewServer(port)
-
 	server.Start()
 }
