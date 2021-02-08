@@ -37,13 +37,18 @@ func NewBucket(name, region string) (*Bucket, error) {
 	return &Bucket{name, region, svc}, nil
 }
 
+type totalJSON struct {
+	Title string
+	Tasks []TaskType
+}
+
 // Sets up Task list struct
-type TaskList struct {
-	Tasks []string
+type TaskType struct {
+	Title string
 }
 
 // Collects list of tasks from S3 Bucket
-func (b *Bucket) CollectList() (TaskList, error) {
+func (b *Bucket) CollectList() (totalJSON, error) {
 
 	finalList := make([]string, 0)
 
@@ -62,7 +67,7 @@ func (b *Bucket) CollectList() (TaskList, error) {
 		log.Fatal(err)
 	}
 
-	var listOfTasks TaskList
+	var listOfTasks totalJSON
 	err = json.NewDecoder(listResp.Body).Decode(&listOfTasks)
 	if err != nil {
 		log.Fatal(err)
