@@ -1,7 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
+	"net/http"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -34,13 +37,19 @@ func NewBucket(name, region string) (*Bucket, error) {
 	return &Bucket{name, region, svc}, nil
 }
 
-func (b *Bucket) CollectList() ([]string, error) {
+// Sets up Task list struct
+type TaskList struct {
+	Tasks []string
+}
+
+// Collects list of tasks from S3 Bucket
+func (b *Bucket) CollectList() (TaskList, error) {
 
 	finalList := make([]string, 0)
 
 	resp, err := b.svc.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: &b.name})
 	if err != nil {
-		return nil, fmt.Errorf("Failed to list all objects in the S3 bucket: %v", err)
+		log.Fatal(err)
 	}
 
 	for _, item := range resp.Contents {
@@ -48,5 +57,16 @@ func (b *Bucket) CollectList() ([]string, error) {
 		finalList = append(finalList, fileURL)
 	}
 
-	return finalList, nil
+	listResp, err := http.Get(finalList[0])
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var listOfTasks TaskList
+	err = json.NewDecoder(listResp.Body).Decode(&listOfTasks)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return listOfTasks, nil
 }
